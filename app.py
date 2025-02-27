@@ -37,8 +37,6 @@ if not st.session_state["authenticated"]:
     st.stop()
 
 # Main app content (only accessible after authentication)
-st.sidebar.success(f"✅ Logged in as {st.session_state['username']}")
-st.title("📌 Image & Text Search using CLIP and Pinecone")
 st.write("Welcome! You are successfully authenticated.")
 
 
