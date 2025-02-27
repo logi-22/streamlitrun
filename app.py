@@ -50,7 +50,7 @@ if option == "Text":
             query_embedding = embed_text(query_text)
             search_results = unsplash_index.query(
                 vector=query_embedding,
-                top_k=5,
+                top_k=10,
                 include_metadata=True,
                 namespace="image-search-dataset"
             )
