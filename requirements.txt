@@ -4,4 +4,4 @@ pillow
 numpy
 torch
 transformers
-pinecone-client
+pinecone
