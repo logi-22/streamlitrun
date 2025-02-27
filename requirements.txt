@@ -1,0 +1,7 @@
+streamlit
+requests
+pillow
+numpy
+torch
+transformers
+pinecone-client
