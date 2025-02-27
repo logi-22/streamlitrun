@@ -6,6 +6,29 @@ import numpy as np
 from transformers import AutoProcessor, CLIPModel
 import logging
 from pinecone import Pinecone
+import streamlit as st
+
+def check_authentication():
+    st.sidebar.title("🔑 Login")
+    username = st.sidebar.text_input("Username")
+    password = st.sidebar.text_input("Password", type="password")
+    login_button = st.sidebar.button("Login")
+
+    if login_button:
+        stored_users = st.secrets["credentials"]
+        if username in stored_users and stored_users[username] == password:
+            st.session_state["authenticated"] = True
+            st.experimental_rerun()
+        else:
+            st.sidebar.error("Invalid username or password")
+
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+
+if not st.session_state["authenticated"]:
+    check_authentication()
+    st.stop()
+
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
