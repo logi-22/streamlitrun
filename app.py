@@ -8,26 +8,38 @@ import logging
 from pinecone import Pinecone
 import streamlit as st
 
+# Function to check authentication
 def check_authentication():
     st.sidebar.title("🔑 Login")
-    username = st.sidebar.text_input("Username")
-    password = st.sidebar.text_input("Password", type="password")
+    username = st.sidebar.text_input("Username", key="username_input")
+    password = st.sidebar.text_input("Password", type="password", key="password_input")
     login_button = st.sidebar.button("Login")
 
     if login_button:
-        stored_users = st.secrets["credentials"]
-        if username in stored_users and stored_users[username] == password:
-            st.session_state["authenticated"] = True
-            st.experimental_rerun()
-        else:
-            st.sidebar.error("Invalid username or password")
+        try:
+            stored_users = dict(st.secrets["credentials"])  # Convert to dictionary
+            if username in stored_users and stored_users[username] == password:
+                st.session_state["authenticated"] = True
+                st.session_state["username"] = username
+                st.experimental_rerun()
+            else:
+                st.sidebar.error("❌ Invalid username or password")
+        except Exception as e:
+            st.sidebar.error("⚠️ Authentication system error")
+            st.sidebar.text(str(e))
 
+# Check authentication status
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
 if not st.session_state["authenticated"]:
     check_authentication()
     st.stop()
+
+# Main app content (only accessible after authentication)
+st.sidebar.success(f"✅ Logged in as {st.session_state['username']}")
+st.title("📌 Image & Text Search using CLIP and Pinecone")
+st.write("Welcome! You are successfully authenticated.")
 
 
 # Setup logging
