@@ -21,7 +21,7 @@ def check_authentication():
             if username in stored_users and stored_users[username] == password:
                 st.session_state["authenticated"] = True
                 st.session_state["username"] = username
-                st.experimental_rerun()
+                st.rerun()  # ✅ Updated method
             else:
                 st.sidebar.error("❌ Invalid username or password")
         except Exception as e:
