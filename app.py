@@ -3,7 +3,7 @@ import requests
 import os
 
 # Backend API URL
-API_URL = "http://0.0.0.0:7860"
+API_URL = "http://0.0.0.0:8000"
 
 # Session state for authentication
 if "access_token" not in st.session_state:
