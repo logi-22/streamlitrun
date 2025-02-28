@@ -1,6 +1,5 @@
 streamlit
 requests
 Pillow
-io
-json
-python-multipart  # Required for form data handling in FastAPI
+json  # (Optional, not needed unless using `json` from PyPI)
+python-multipart  # Required for FastAPI form handling
