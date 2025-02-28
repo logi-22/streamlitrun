@@ -1,4 +1,15 @@
-streamlit
+# FastAPI and dependencies
+fastapi
+uvicorn
+python-dotenv
+pillow
 requests
-Pillow
-python-multipart
+jose
+python-jose
+pyjwt
+transformers
+torch
+pinecone
+
+# Streamlit for frontend
+streamlit

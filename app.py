@@ -1,88 +1,78 @@
 import streamlit as st
 import requests
-from PIL import Image
-import io
-import json
+import os
 
-# API Base URL
-API_URL = "http://0.0.0.0:7860"
+# Backend API URL
+API_URL = "http://127.0.0.1:8000"
 
-# Authentication
-st.sidebar.title("🔑 Login")
-username = st.sidebar.text_input("Username", key="username_input")
-password = st.sidebar.text_input("Password", type="password", key="password_input")
-login_button = st.sidebar.button("Login")
+# Session state for authentication
+if "access_token" not in st.session_state:
+    st.session_state.access_token = None
 
-if "authenticated" not in st.session_state:
-    st.session_state["authenticated"] = False
+st.title("🔍 Image Search System")
+st.sidebar.subheader("Login")
 
-if login_button:
-    try:
-        response = requests.post(
-            f"{API_URL}/embed_text/", data={"text": "test"}, auth=(username, password)
-        )
+# Login form
+with st.sidebar.form(key="login_form"):
+    username = st.text_input("Username", value="admin")
+    password = st.text_input("Password", type="password", value="password123")
+    submit_button = st.form_submit_button("Login")
+
+    if submit_button:
+        response = requests.post(f"{API_URL}/token", data={"username": username, "password": password})
         if response.status_code == 200:
-            st.session_state["authenticated"] = True
-            st.session_state["username"] = username
-            st.rerun()
+            st.session_state.access_token = response.json().get("access_token")
+            st.sidebar.success("✅ Logged in successfully!")
         else:
-            st.sidebar.error("❌ Invalid credentials")
-    except Exception as e:
-        st.sidebar.error("⚠️ Authentication error")
-        st.sidebar.text(str(e))
+            st.sidebar.error("❌ Incorrect username or password")
 
-if not st.session_state["authenticated"]:
+# Check authentication
+if not st.session_state.access_token:
+    st.warning("🔒 Please log in first.")
     st.stop()
 
-st.title("📌 Image & Text Search with CLIP and Pinecone")
-option = st.radio("Choose input type:", ("Text", "Image"))
+# Tabs for text search and image search
+tab1, tab2 = st.tabs(["🔠 Search by Text", "🖼️ Search by Image"])
 
-if option == "Text":
-    query_text = st.text_input("Enter a search term:")
-    if st.button("Search"):
-        if query_text:
-            response = requests.post(
-                f"{API_URL}/embed_text/", data={"text": query_text}, auth=(username, password)
-            )
+# Text-based search
+with tab1:
+    st.subheader("🔠 Search by Text")
+    text_query = st.text_input("Enter a search query:")
+    if st.button("🔍 Search"):
+        if text_query:
+            headers = {"Authorization": f"Bearer {st.session_state.access_token}"}
+            response = requests.get(f"{API_URL}/search/text/", params={"query": text_query}, headers=headers)
+
             if response.status_code == 200:
-                embedding = response.json()["embedding"]
-                search_response = requests.post(
-                    f"{API_URL}/search/", json={"query_embedding": embedding}, auth=(username, password)
-                )
-                results = search_response.json().get("results", [])
+                results = response.json().get("matches", [])
                 if results:
+                    st.success(f"✅ Found {len(results)} similar images!")
                     for match in results:
-                        url = match["metadata"].get("url", "No URL")
-                        st.image(url, caption=f"Score: {match['score']:.4f}", use_container_width=True)
+                        st.image(match["url"], caption=f"Match ID: {match['id']} - Score: {match['score']:.4f}")
                 else:
-                    st.warning("No matching images found.")
+                    st.warning("❌ No matches found.")
             else:
-                st.error("Error retrieving embedding.")
+                st.error("⚠️ Error searching for images.")
+
+# Image-based search
+with tab2:
+    st.subheader("🖼️ Search by Image")
+    uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+
+    if st.button("🔍 Search by Image") and uploaded_file:
+        files = {"file": uploaded_file.getvalue()}
+        headers = {"Authorization": f"Bearer {st.session_state.access_token}"}
+        response = requests.post(f"{API_URL}/search/image/", files=files, headers=headers)
+
+        if response.status_code == 200:
+            results = response.json().get("matches", [])
+            if results:
+                st.success(f"✅ Found {len(results)} similar images!")
+                for match in results:
+                    st.image(match["url"], caption=f"Match ID: {match['id']} - Score: {match['score']:.4f}")
+            else:
+                st.warning("❌ No matches found.")
         else:
-            st.error("Please enter a search term.")
+            st.error("⚠️ Error searching for images.")
 
-elif option == "Image":
-    uploaded_file = st.file_uploader("Upload an image:", type=["jpg", "jpeg", "png"])
-    if uploaded_file:
-        image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded Image", use_container_width=True)
-        if st.button("Search"):
-            img_byte_arr = io.BytesIO()
-            image.save(img_byte_arr, format="PNG")
-            img_byte_arr = img_byte_arr.getvalue()
-            files = {"file": (uploaded_file.name, img_byte_arr, "image/png")}
-            response = requests.post(f"{API_URL}/embed_image/", files=files, auth=(username, password))
-            if response.status_code == 200:
-                embedding = response.json()["embedding"]
-                search_response = requests.post(
-                    f"{API_URL}/search/", json={"query_embedding": embedding}, auth=(username, password)
-                )
-                results = search_response.json().get("results", [])
-                if results:
-                    for match in results:
-                        url = match["metadata"].get("url", "No URL")
-                        st.image(url, caption=f"Score: {match['score']:.4f}", use_container_width=True)
-                else:
-                    st.warning("No similar images found.")
-            else:
-                st.error("Error retrieving embedding.")
+st.sidebar.button("Logout", on_click=lambda: st.session_state.pop("access_token", None))
