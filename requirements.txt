@@ -1,7 +1,6 @@
 streamlit
 requests
-pillow
-numpy
-torch
-transformers
-pinecone
+Pillow
+io
+json
+python-multipart  # Required for form data handling in FastAPI
