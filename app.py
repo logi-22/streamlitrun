@@ -14,8 +14,8 @@ st.sidebar.subheader("Login")
 
 # Login form
 with st.sidebar.form(key="login_form"):
-    username = st.text_input("Username", value="admin")
-    password = st.text_input("Password", type="password", value="password123")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
     submit_button = st.form_submit_button("Login")
 
     if submit_button:
