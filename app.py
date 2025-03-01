@@ -3,7 +3,7 @@ import requests
 import os
 
 # Backend API URL
-API_URL = "https://logeswari-image-search.hf.space"
+API_URL = "https://logeswari-new-1.hf.space"
 
 # Session state for authentication
 if "access_token" not in st.session_state:
